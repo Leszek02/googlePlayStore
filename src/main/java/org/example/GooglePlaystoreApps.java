@@ -41,7 +41,7 @@ public class GooglePlaystoreApps extends Configured implements Tool {
         job.setJarByClass(this.getClass());
         FileInputFormat.addInputPath(job, new Path(args[0]));
         FileOutputFormat.setOutputPath(job, new Path(args[1]));
-        //job.setNumReduceTasks(10);
+//        job.setNumReduceTasks(10);
         job.setMapperClass(GooglePlaystoreAppsMapper.class);
         job.setCombinerClass(GooglePlaystoreAppsCombiner.class);
         job.setReducerClass(GooglePlaystoreAppsReducer.class);
@@ -110,24 +110,22 @@ public class GooglePlaystoreApps extends Configured implements Tool {
 
     public static class GooglePlaystoreAppsReducer extends Reducer<DataKey, DeveloperStats, Text, Text> {
 
-        private double rating = 0.0d;
-        private int ratingCount = 0;
-        private int applicationCreated = 0;
         private final IntWritable developerID = new IntWritable();
         private final Text year = new Text();
 
         @Override
         public void reduce(DataKey key, Iterable<DeveloperStats> values, Context context) throws IOException, InterruptedException {
-           // System.out.println(2);
-            Text resultKey = new Text("The developer " + key.GetDeveloperID() + " in year " + key.GetYear() + " achieved: ");
-
+            double rating = 0.0d;
+            int ratingCount = 0;
+            int applicationCreated = 0;
             for (DeveloperStats stats : values) {
-                rating = stats.GetRating().get();
-                ratingCount = stats.GetRatingCount().get();
-                applicationCreated = stats.GetApplicationCreated().get();
+                rating += stats.GetRating().get();
+                ratingCount += stats.GetRatingCount().get();
+                applicationCreated += stats.GetApplicationCreated().get();
             }
-
-            Text resultVal = new Text(" Rating sum: " + rating + ", Rating count sum: " + ratingCount + ", Applications created: " + applicationCreated);
+            DeveloperStats finalStats = new DeveloperStats(rating, ratingCount, applicationCreated);
+            Text resultKey = new Text(key.GetDeveloperID() + " " + key.GetYear());
+            Text resultVal = new Text(finalStats.GetRating() + " " + finalStats.GetRatingCount() + " " + finalStats.GetApplicationCreated());
             context.write(resultKey, resultVal);
         }
     }
