@@ -41,7 +41,7 @@ public class GooglePlaystoreApps extends Configured implements Tool {
         job.setJarByClass(this.getClass());
         FileInputFormat.addInputPath(job, new Path(args[0]));
         FileOutputFormat.setOutputPath(job, new Path(args[1]));
-        job.setNumReduceTasks(10);
+        //job.setNumReduceTasks(10);
         job.setMapperClass(GooglePlaystoreAppsMapper.class);
         job.setCombinerClass(GooglePlaystoreAppsCombiner.class);
         job.setReducerClass(GooglePlaystoreAppsReducer.class);
