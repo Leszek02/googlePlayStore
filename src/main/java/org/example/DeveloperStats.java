@@ -45,7 +45,7 @@ public class DeveloperStats implements WritableComparable<DeveloperStats> {
     }
 
     public void addStats(DeveloperStats stats) {
-        this.rating = new DoubleWritable(Math.round(this.rating.get() + stats.GetRating().get()));
+        this.rating = new DoubleWritable(this.rating.get() + stats.GetRating().get());
         this.ratingCount = new IntWritable(this.ratingCount.get() + stats.GetRatingCount().get());
         this.applicationCreated = new IntWritable(this.applicationCreated.get() + stats.GetApplicationCreated().get());
     }

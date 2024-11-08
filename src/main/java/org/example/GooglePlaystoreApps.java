@@ -13,16 +13,14 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-// What to do with cases where year = ~ (example: Sueca ZingPlay Jogo de Cartas Online)
+// EXECUTION COMMAND: hadoop jar mapreduce.jar org.example.GooglePlaystoreApps <INPUT_PATH> <OUTPUT_PATH>
+// MY EXECUTION COMMAND: hadoop jar mapreduce.jar org.example.GooglePlaystoreApps gs://pbd-24-lm/labs/hadoop/in
+//put/datasource1 gs://pbd-24-lm/labs/hadoop/input/mapreduce
 
 public class GooglePlaystoreApps extends Configured implements Tool {
-
-    private static final Logger log = LoggerFactory.getLogger(GooglePlaystoreApps.class);
 
     public static void main(String[] args) {
         int res = 1;
@@ -41,7 +39,6 @@ public class GooglePlaystoreApps extends Configured implements Tool {
         job.setJarByClass(this.getClass());
         FileInputFormat.addInputPath(job, new Path(args[0]));
         FileOutputFormat.setOutputPath(job, new Path(args[1]));
-//        job.setNumReduceTasks(10);
         job.setMapperClass(GooglePlaystoreAppsMapper.class);
         job.setCombinerClass(GooglePlaystoreAppsCombiner.class);
         job.setReducerClass(GooglePlaystoreAppsReducer.class);
@@ -98,7 +95,6 @@ public class GooglePlaystoreApps extends Configured implements Tool {
                 if (dataCorrectness) {
                     dataKey.set(developerID, year);
                     developerStats.set(rating, ratingCount, applicationCreated);
-                    //System.out.println(developerID + " " + year + " " + rating + " " + ratingCount + " " + applicationCreated);
                     context.write(dataKey, developerStats);
                 }
             } catch (Exception e) {
@@ -109,9 +105,6 @@ public class GooglePlaystoreApps extends Configured implements Tool {
     }
 
     public static class GooglePlaystoreAppsReducer extends Reducer<DataKey, DeveloperStats, Text, Text> {
-
-        private final IntWritable developerID = new IntWritable();
-        private final Text year = new Text();
 
         @Override
         public void reduce(DataKey key, Iterable<DeveloperStats> values, Context context) throws IOException, InterruptedException {
@@ -124,8 +117,8 @@ public class GooglePlaystoreApps extends Configured implements Tool {
                 applicationCreated += stats.GetApplicationCreated().get();
             }
             DeveloperStats finalStats = new DeveloperStats(rating, ratingCount, applicationCreated);
-            Text resultKey = new Text(key.GetDeveloperID() + " " + key.GetYear());
-            Text resultVal = new Text(finalStats.GetRating() + " " + finalStats.GetRatingCount() + " " + finalStats.GetApplicationCreated());
+            Text resultKey = new Text(key.GetDeveloperID() + "," + key.GetYear());
+            Text resultVal = new Text(finalStats.GetRating() + "," + finalStats.GetRatingCount() + "," + finalStats.GetApplicationCreated());
             context.write(resultKey, resultVal);
         }
     }
@@ -137,7 +130,6 @@ public class GooglePlaystoreApps extends Configured implements Tool {
 
         @Override
         public void reduce(DataKey key, Iterable<DeveloperStats> values, Context context) throws IOException, InterruptedException {
-            //System.out.println(1);
             developerStats.set(new DoubleWritable(0), new IntWritable(0), new IntWritable(0));
             for (DeveloperStats stats : values) {
                 developerStats.addStats(stats);
